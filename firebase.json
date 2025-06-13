@@ -1,0 +1,31 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "hotel-booking-app-projec-1097d",
+          "appId": "1:649482852438:android:77fd670733ce8759ed43f7",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "hotel-booking-app-projec-1097d",
+          "configurations": {
+            "android": "1:649482852438:android:77fd670733ce8759ed43f7",
+            "ios": "1:649482852438:ios:43f87455520e02e0ed43f7",
+            "macos": "1:649482852438:ios:43f87455520e02e0ed43f7",
+            "web": "1:649482852438:web:5b1fe342388d4e94ed43f7",
+            "windows": "1:649482852438:web:b5ad78a2ebff8e45ed43f7"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
