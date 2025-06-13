@@ -21,26 +21,6 @@ class _ProfilePageState extends State<ProfilePage> {
   String? profileImageUrl;
   File? _localImage;
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   FirebaseAuth.instance.currentUser?.reload().then((_) {
-  //     setState(() {}); // agar displayName terbaru muncul
-  //   });
-  //   _loadUser();
-  //   // print("Nama: ${FirebaseAuth.instance.currentUser?.displayName}");
-  //   // print("Email: ${FirebaseAuth.instance.currentUser?.email}");
-  // }
-
-  // void _loadUser() async {
-  //   await FirebaseAuth.instance.currentUser!
-  //       .reload(); // refresh data dari server
-  //   if (!mounted)
-  //     setState(() {
-  //       user = FirebaseAuth.instance.currentUser; // ambil user terbaru
-  //     });
-  // }
-
   @override
   void initState() {
     super.initState();
@@ -101,32 +81,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Future<void> _pickAndUploadImage() async {
-  //   final picker = ImagePicker();
-  //   final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-  //   if (pickedFile != null) {
-  //     final file = File(pickedFile.path);
-  //     final uid = FirebaseAuth.instance.currentUser!.uid;
-
-  //     final storageRef =
-  //         FirebaseStorage.instance.ref().child('profile_pictures/$uid.jpg');
-  //     await storageRef.putFile(file);
-
-  //     final downloadUrl = await storageRef.getDownloadURL();
-
-  //     // Simpan URL ke Firestore
-  //     await FirebaseFirestore.instance
-  //         .collection('users')
-  //         .doc(uid)
-  //         .update({'photoUrl': downloadUrl});
-
-  //     setState(() {
-  //       profileImageUrl = downloadUrl;
-  //     });
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     final displayName = user?.displayName ?? 'No Name';
@@ -151,24 +105,6 @@ class _ProfilePageState extends State<ProfilePage> {
             Center(
               child: Column(
                 children: [
-                  // InkWell(
-                  //   onTap: () {
-                  //     // Action for changing profile picture
-                  //   },
-                  //   child: ClipOval(
-                  //     child: Container(
-                  //       width: 100,
-                  //       height: 100,
-                  //       color: Colors.grey.shade300,
-                  //       child: const Icon(
-                  //         Icons.camera_alt,
-                  //         size: 40,
-                  //         color: Colors.white,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-
                   InkWell(
                     onTap: _pickAndSaveImage,
                     child: ClipOval(

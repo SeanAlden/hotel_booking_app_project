@@ -17,29 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // void login() async {
-  //   if (_formKey.currentState!.validate()) {
-  //     try {
-  //       await _auth.signInWithEmailAndPassword(
-  //           email: emailController.text.trim(),
-  //           password: passwordController.text.trim());
-
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Login berhasil!")),
-  //       );
-
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (_) => const CheckAuth()),
-  //       );
-  //     } catch (e) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text("Login gagal: ${e.toString()}")),
-  //       );
-  //     }
-  //   }
-  // }
-
   void login() async {
     if (_formKey.currentState!.validate()) {
       try {

@@ -29,7 +29,6 @@ class AppUser {
       address: map['address'] ?? '',
       gender: map['gender'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      // createdAt: map['createdAt'] ?? '',
     );
   }
 
