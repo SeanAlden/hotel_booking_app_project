@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hotel_booking_app/model/location.dart';
 import 'package:hotel_booking_app/model/room.dart';
 import 'package:hotel_booking_app/pages/history_page.dart';
+import 'package:intl/intl.dart';
 
 class HotelDetailPage extends StatefulWidget {
   final String hotelId; // Ganti hotelName dengan hotelId
@@ -29,6 +30,19 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
   double totalPrice = 0; // Total price calculation
   List<int> selectedRoomIndices =
       []; // List untuk menyimpan indeks ruangan yang dipilih
+
+  // Fungsi untuk memformat harga
+  String formatCurrency(double amount) {
+    final formatCurrency = NumberFormat.simpleCurrency(locale: 'id_ID');
+    return formatCurrency.format(amount);
+  }
+
+  // Fungsi format tanggal Indonesia
+  String formatDate(DateTime? date) {
+    if (date == null) return '-';
+    final dateFormat = DateFormat('dd MMMM yyyy', 'id_ID');
+    return dateFormat.format(date);
+  }
 
   @override
   void initState() {
@@ -170,7 +184,7 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Total Price: Rp${totalPrice.toStringAsFixed(2)}',
+                      Text('Total Price: ${formatCurrency(totalPrice)}',
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       ElevatedButton(
                         onPressed: () async {
@@ -191,7 +205,8 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
                             // Navigasi ke halaman history booking
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const HistoryPage()),
+                              MaterialPageRoute(
+                                  builder: (_) => const HistoryPage()),
                             );
                           } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -324,7 +339,8 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
                                               fontSize: 18,
                                               fontWeight: FontWeight.w600)),
                                       const SizedBox(height: 8),
-                                      Text("Rp${room.price} / night"),
+                                      Text(
+                                          "${formatCurrency(room.price)} / night"),
                                       const SizedBox(height: 12),
                                       // Date Picker for Start Date
                                       OutlinedButton(
@@ -398,7 +414,7 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
                                       // Display Total Price for the room
                                       if (roomTotalPrices[index] > 0)
                                         Text(
-                                          'Room Total Price: Rp${roomTotalPrices[index].toStringAsFixed(2)}',
+                                          'Room Total Price: ${formatCurrency(roomTotalPrices[index])}',
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16),
