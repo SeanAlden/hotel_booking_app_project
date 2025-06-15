@@ -3,6 +3,7 @@ import 'package:hotel_booking_app/model/hotel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hotel_booking_app/model/location.dart';
 import 'package:hotel_booking_app/model/room.dart';
+import 'package:hotel_booking_app/pages/history_page.dart';
 
 class HotelDetailPage extends StatefulWidget {
   final String hotelId; // Ganti hotelName dengan hotelId
@@ -172,7 +173,31 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
                       Text('Total Price: Rp${totalPrice.toStringAsFixed(2)}',
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          try {
+                            for (var index in selectedRoomIndices) {
+                              final room = _rooms[index];
+
+                              // Set tanggal, guest, dan total harga ke object
+                              room.startDate = startDates[index];
+                              room.endDate = endDates[index];
+                              room.guestCount = guestCounts[index];
+                              room.totalPrice = roomTotalPrices[index];
+
+                              // Panggil bookRoom dari instance
+                              await room.bookRoom();
+                            }
+
+                            // Navigasi ke halaman history booking
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const HistoryPage()),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Booking gagal: $e')),
+                            );
+                          }
                           // Navigate to booking page
                         },
                         style: ElevatedButton.styleFrom(
