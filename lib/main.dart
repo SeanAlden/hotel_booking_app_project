@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hotel_booking_app/services/check_auth.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'services/firebase_options.dart';
 
 void main() async {
@@ -8,6 +9,8 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await initializeDateFormatting(
+      'id_ID', null); // Inisialisasi lokal bahasa Indonesia
   runApp(const MyApp());
 }
 

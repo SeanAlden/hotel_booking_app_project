@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hotel_booking_app/model/location.dart'; // Ganti dengan path yang sesuai
+import 'package:hotel_booking_app/model/location.dart';
+import 'package:hotel_booking_app/pages/location_detail_page.dart'; // Ganti dengan path yang sesuai
 
 class LocationSearchPage extends StatefulWidget {
   const LocationSearchPage({Key? key}) : super(key: key);
@@ -19,7 +20,8 @@ class _LocationSearchPageState extends State<LocationSearchPage> {
   }
 
   Future<void> _fetchLocations() async {
-    final snapshot = await FirebaseFirestore.instance.collection('locations').get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection('locations').get();
     setState(() {
       locations = snapshot.docs.map((doc) {
         return Location(
@@ -34,7 +36,8 @@ class _LocationSearchPageState extends State<LocationSearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Location', style: TextStyle(color: Colors.white)),
+        title: const Text('Search Location',
+            style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -61,9 +64,17 @@ class _LocationSearchPageState extends State<LocationSearchPage> {
                 ),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  // TODO: Handle location selection if needed
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LocationDetailPage(
+                        locationId: locations[index].id,
+                      ),
+                    ),
+                  );
                 },
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
               );
             },
           ),

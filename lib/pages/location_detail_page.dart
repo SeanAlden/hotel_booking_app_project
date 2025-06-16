@@ -110,10 +110,36 @@ class _HotelCard extends StatelessWidget {
               maxLines: 3,
             ),
             const SizedBox(height: 4),
+            // Row(
+            //   children: [
+            //     const Icon(Icons.star, color: Colors.orange),
+            //     Text("${hotel['rating']} / 5.0"),
+            //     IconButton(
+            //       icon: const Icon(Icons.favorite_border),
+            //       onPressed: () {
+            //         // Handle wishlist toggle
+            //       },
+            //     ),
+            //   ],
+            // ),
+
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.star, color: Colors.orange),
-                Text("${hotel['rating']} / 5.0"),
+                Row(
+                  children: [
+                    const Icon(Icons.star, color: Colors.orange),
+                    const SizedBox(
+                        width: 6), // Jarak kecil antara ikon dan teks
+                    Text("${hotel['rating']} / 5.0"),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.favorite_border),
+                  onPressed: () {
+                    // Handle wishlist toggle
+                  },
+                ),
               ],
             ),
           ],
