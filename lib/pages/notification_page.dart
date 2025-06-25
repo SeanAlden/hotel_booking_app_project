@@ -392,7 +392,7 @@ class _NotificationPageState extends State<NotificationPage> {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('book_history')
-            .where('user_id', isEqualTo: _currentUser!.uid)
+            .where('user_id', isEqualTo: _currentUser.uid)
             .orderBy('end_date', descending: false)
             .snapshots(),
         builder: (context, snapshot) {

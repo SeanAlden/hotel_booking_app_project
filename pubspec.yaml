@@ -49,11 +49,17 @@ dependencies:
   firebase_auth: ^5.5.3
   http: ^1.3.0
   flutter_image_compress: ^2.4.0
+  flutter_native_splash: ^2.3.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_native_splash: ^2.3.6
+  flutter_launcher_icons: ^0.14.4
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/logo.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -61,6 +67,11 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
+
+# flutter_launcher_icons: 
+#   android: "launcher_icon"
+#   ios: true
+#   image_path: "assets/icons/logo.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -71,12 +82,20 @@ flutter:
       - assets/images/profile.png
       - assets/images/hotel.png
       - assets/images/room.png
-      - assets/icons/flutter_splash_screen_icon.png
+      - assets/images/hotelstartscreen.jpg
+      - assets/icons/logo.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/icons/logo.png # Ganti dengan gambar yang ingin ditampilkan
+  android: true
+  ios: true
+  web: false
 
   # To add assets to your application, add an assets section, like this:
   # assets:

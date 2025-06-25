@@ -791,6 +791,437 @@
 //   }
 // }
 
+// import 'dart:typed_data';
+
+// import 'package:flutter/material.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:hive_flutter/hive_flutter.dart';
+// import 'package:hotel_booking_app/model/user.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:hotel_booking_app/pages/notification_page.dart';
+// import 'package:hotel_booking_app/services/check_auth.dart';
+// import 'package:hotel_booking_app/services/firebase_options.dart';
+// import 'package:intl/date_symbol_data_local.dart';
+
+// // Nama kotak Hive untuk menyimpan jumlah notifikasi
+// const String NOTIFICATION_COUNT_BOX = 'notification_count_box';
+// const String NEW_NOTIFICATION_KEY = 'new_notification_count';
+
+// // Fungsi top-level untuk menangani pesan di latar belakang
+// // Harus dianotasi dengan @pragma('vm:entry-point') untuk Android
+// @pragma('vm:entry-point')
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+//   debugPrint("Menangani pesan di latar belakang: ${message.messageId}");
+
+//   try {
+//     // Pastikan kotak Hive terbuka dalam konteks latar belakang
+//     if (!Hive.isBoxOpen(NOTIFICATION_COUNT_BOX)) {
+//       await Hive.openBox<int>(NOTIFICATION_COUNT_BOX);
+//       debugPrint('FCM Latar Belakang: Membuka NOTIFICATION_COUNT_BOX.');
+//     }
+//     final Box<int> countBox = Hive.box<int>(NOTIFICATION_COUNT_BOX);
+//     int currentCount = countBox.get(NEW_NOTIFICATION_KEY, defaultValue: 0)!;
+//     await countBox.put(NEW_NOTIFICATION_KEY, currentCount + 1);
+//     debugPrint('FCM Latar Belakang: Jumlah notifikasi baru bertambah menjadi: ${currentCount + 1}');
+
+//     _showLocalNotification(
+//       message.notification?.title ?? 'Pesan Latar Belakang Baru',
+//       message.notification?.body ??
+//           'Anda memiliki notifikasi baru dari aplikasi.',
+//       payload: message.data['payload'],
+//     );
+//   } catch (e) {
+//     debugPrint('FCM Latar Belakang: Error saat menambah jumlah notifikasi atau menampilkan notifikasi lokal: $e');
+//   }
+// }
+
+// // Instansi global untuk FlutterLocalNotificationsPlugin
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//     FlutterLocalNotificationsPlugin();
+
+// // Helper untuk menampilkan notifikasi lokal
+// void _showLocalNotification(String title, String body,
+//     {String? payload}) async {
+//   const AndroidNotificationDetails androidPlatformChannelSpecifics =
+//       AndroidNotificationDetails(
+//     'booking_channel_id', // ID saluran
+//     'Booking Notifications', // Nama saluran
+//     channelDescription:
+//         'Notifikasi untuk pembaruan dan pengingat pemesanan hotel.',
+//     importance: Importance.max,
+//     priority: Priority.high,
+//     showWhen: false,
+//     icon: '@mipmap/ic_launcher', // Pastikan Anda memiliki ikon ini di android/app/src/main/res/mipmap/
+//   );
+//   const NotificationDetails platformChannelSpecifics =
+//       NotificationDetails(android: androidPlatformChannelSpecifics);
+//   await flutterLocalNotificationsPlugin.show(
+//     0, // ID Notifikasi
+//     title,
+//     body,
+//     platformChannelSpecifics,
+//     payload: payload,
+//   );
+//   debugPrint('Notifikasi lokal ditampilkan: $title - $body');
+// }
+
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+//   // Inisialisasi Hive dan buka kotak yang diperlukan
+//   await Hive.initFlutter();
+//   await Hive.openBox<Uint8List>('hotel_images');
+//   await Hive.openBox<Uint8List>('room_images');
+//   await Hive.openBox<int>(NOTIFICATION_COUNT_BOX); // Buka kotak untuk jumlah notifikasi
+//   debugPrint('Kotak Hive diinisialisasi dan dibuka.');
+
+//   await initializeDateFormatting('id_ID', null); // Inisialisasi lokal bahasa Indonesia untuk intl
+
+//   // Minta izin FCM
+//   FirebaseMessaging messaging = FirebaseMessaging.instance;
+//   NotificationSettings settings = await messaging.requestPermission(
+//     alert: true,
+//     announcement: false,
+//     badge: true,
+//     carPlay: false,
+//     criticalAlert: false,
+//     provisional: false,
+//     sound: true,
+//   );
+//   debugPrint('Pengguna memberikan izin: ${settings.authorizationStatus}');
+
+//   // Konfigurasi handler pesan latar belakang
+//   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+//   // Inisialisasi plugin flutter_local_notifications
+//   const AndroidInitializationSettings initializationSettingsAndroid =
+//       AndroidInitializationSettings('@mipmap/ic_launcher'); // Ikon aplikasi
+//   const InitializationSettings initializationSettings = InitializationSettings(
+//     android: initializationSettingsAndroid,
+//   );
+//   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+//       onDidReceiveNotificationResponse: (NotificationResponse response) async {
+//     debugPrint('Notifikasi lokal diketuk! Payload: ${response.payload}');
+//     // Navigasi ke NotificationPage saat notifikasi diketuk
+//     navigatorKey.currentState?.push(
+//       MaterialPageRoute(builder: (context) => const NotificationPage()),
+//     );
+//   });
+
+//   // Dapatkan token FCM dan simpan ke Firestore
+//   FirebaseAuth.instance.authStateChanges().listen((user) async {
+//     if (user != null) {
+//       String? fcmToken = await messaging.getToken();
+//       if (fcmToken != null) {
+//         debugPrint('Token FCM: $fcmToken');
+//         AppUser? currentUser = await AppUser.fetchUserById(user.uid);
+//         if (currentUser != null && currentUser.fcmToken != fcmToken) {
+//           await currentUser.updateFcmToken(fcmToken);
+//         } else if (currentUser == null) {
+//           debugPrint(
+//               'Dokumen pengguna tidak ditemukan untuk ${user.uid}. Tidak dapat menyimpan token FCM.');
+//         }
+//       }
+//     }
+//   });
+
+//   // Tangani pesan saat aplikasi di foreground
+//   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+//     debugPrint('Mendapat pesan saat di foreground!');
+//     debugPrint('Data pesan: ${message.data}');
+
+//     if (message.notification != null) {
+//       _showLocalNotification(
+//         message.notification?.title ?? 'Notifikasi Baru',
+//         message.notification?.body ?? 'Anda memiliki notifikasi baru.',
+//         payload: message.data['payload'],
+//       );
+
+//       try {
+//         // Pastikan kotak Hive terbuka sebelum menambah
+//         if (!Hive.isBoxOpen(NOTIFICATION_COUNT_BOX)) {
+//           await Hive.openBox<int>(NOTIFICATION_COUNT_BOX);
+//           debugPrint('FCM Foreground: Membuka NOTIFICATION_COUNT_BOX.');
+//         }
+//         final Box<int> countBox = Hive.box<int>(NOTIFICATION_COUNT_BOX);
+//         int currentCount = countBox.get(NEW_NOTIFICATION_KEY, defaultValue: 0)!;
+//         await countBox.put(NEW_NOTIFICATION_KEY, currentCount + 1);
+//         debugPrint('FCM Foreground: Jumlah notifikasi baru bertambah menjadi: ${currentCount + 1}');
+//       } catch (e) {
+//         debugPrint('FCM Foreground: Error saat menambah jumlah notifikasi: $e');
+//       }
+//     }
+//   });
+
+//   // Tangani pesan saat aplikasi dibuka dari keadaan terminated
+//   RemoteMessage? initialMessage =
+//       await FirebaseMessaging.instance.getInitialMessage();
+//   if (initialMessage != null) {
+//     debugPrint(
+//         'Aplikasi dibuka dari keadaan terminated oleh notifikasi: ${initialMessage.messageId}');
+//     // Hitungan TIDAK diinkremen di sini, karena pengguna langsung menavigasi.
+//     // initState NotificationPage akan mereset hitungan saat memuat.
+//   }
+
+//   // Tangani pesan saat aplikasi dibuka dari keadaan background
+//   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+//     debugPrint(
+//         'Aplikasi dibuka dari background oleh notifikasi: ${message.messageId}');
+//     // Hitungan TIDAK diinkremen di sini, karena pengguna langsung menavigasi.
+//     // initState NotificationPage akan mereset hitungan saat memuat.
+//     navigatorKey.currentState?.push(
+//       MaterialPageRoute(builder: (context) => const NotificationPage()),
+//     );
+//   });
+
+//   runApp(const MyApp());
+// }
+
+// // GlobalKey untuk NavigatorState jika Anda perlu menavigasi dari luar widget tree
+// final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       navigatorKey: navigatorKey, // Tetapkan kunci global
+//       title: 'Aplikasi Pemesanan Hotel',
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//         visualDensity: VisualDensity.adaptivePlatformDensity,
+//       ),
+//       // home: const LoginPage(),
+//       home: CheckAuth(),
+//     );
+//   }
+// }
+
+// import 'dart:typed_data';
+
+// import 'package:flutter/material.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:hive_flutter/hive_flutter.dart';
+// import 'package:hotel_booking_app/model/user.dart';
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'package:hotel_booking_app/pages/notification_page.dart';
+// import 'package:hotel_booking_app/services/check_auth.dart';
+// import 'package:hotel_booking_app/services/firebase_options.dart';
+// import 'package:intl/date_symbol_data_local.dart';
+// import 'package:hotel_booking_app/pages/get_started_screen.dart'; // Import GetStartedScreen
+
+// // Nama kotak Hive untuk menyimpan jumlah notifikasi
+// const String NOTIFICATION_COUNT_BOX = 'notification_count_box';
+// const String NEW_NOTIFICATION_KEY = 'new_notification_count';
+
+// // Fungsi top-level untuk menangani pesan di latar belakang
+// // Harus dianotasi dengan @pragma('vm:entry-point') untuk Android
+// @pragma('vm:entry-point')
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+//   debugPrint("Menangani pesan di latar belakang: ${message.messageId}");
+
+//   try {
+//     // Pastikan kotak Hive terbuka dalam konteks latar belakang
+//     if (!Hive.isBoxOpen(NOTIFICATION_COUNT_BOX)) {
+//       await Hive.openBox<int>(NOTIFICATION_COUNT_BOX);
+//       debugPrint('FCM Latar Belakang: Membuka NOTIFICATION_COUNT_BOX.');
+//     }
+//     final Box<int> countBox = Hive.box<int>(NOTIFICATION_COUNT_BOX);
+//     int currentCount = countBox.get(NEW_NOTIFICATION_KEY, defaultValue: 0)!;
+//     await countBox.put(NEW_NOTIFICATION_KEY, currentCount + 1);
+//     debugPrint('FCM Latar Belakang: Jumlah notifikasi baru bertambah menjadi: ${currentCount + 1}');
+
+//     _showLocalNotification(
+//       message.notification?.title ?? 'Pesan Latar Belakang Baru',
+//       message.notification?.body ??
+//           'Anda memiliki notifikasi baru dari aplikasi.',
+//       payload: message.data['payload'],
+//     );
+//   } catch (e) {
+//     debugPrint('FCM Latar Belakang: Error saat menambah jumlah notifikasi atau menampilkan notifikasi lokal: $e');
+//   }
+// }
+
+// // Instansi global untuk FlutterLocalNotificationsPlugin
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//     FlutterLocalNotificationsPlugin();
+
+// // Helper untuk menampilkan notifikasi lokal
+// void _showLocalNotification(String title, String body,
+//     {String? payload}) async {
+//   const AndroidNotificationDetails androidPlatformChannelSpecifics =
+//       AndroidNotificationDetails(
+//     'booking_channel_id', // ID saluran
+//     'Booking Notifications', // Nama saluran
+//     channelDescription:
+//         'Notifikasi untuk pembaruan dan pengingat pemesanan hotel.',
+//     importance: Importance.max,
+//     priority: Priority.high,
+//     showWhen: false,
+//     icon: '@mipmap/ic_launcher', // Pastikan Anda memiliki ikon ini di android/app/src/main/res/mipmap/
+//   );
+//   const NotificationDetails platformChannelSpecifics =
+//       NotificationDetails(android: androidPlatformChannelSpecifics);
+//   await flutterLocalNotificationsPlugin.show(
+//     0, // ID Notifikasi
+//     title,
+//     body,
+//     platformChannelSpecifics,
+//     payload: payload,
+//   );
+//   debugPrint('Notifikasi lokal ditampilkan: $title - $body');
+// }
+
+// // GlobalKey untuk NavigatorState jika Anda perlu menavigasi dari luar widget tree
+// final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+//   // Inisialisasi Hive dan buka kotak yang diperlukan
+//   await Hive.initFlutter();
+//   await Hive.openBox<Uint8List>('hotel_images');
+//   await Hive.openBox<Uint8List>('room_images');
+//   await Hive.openBox<int>(NOTIFICATION_COUNT_BOX); // Buka kotak untuk jumlah notifikasi
+//   await Hive.openBox<bool>('app_settings'); // Buka kotak untuk pengaturan aplikasi, termasuk status first launch
+//   debugPrint('Kotak Hive diinisialisasi dan dibuka.');
+
+//   await initializeDateFormatting('id_ID', null); // Inisialisasi lokal bahasa Indonesia untuk intl
+
+//   // Minta izin FCM
+//   FirebaseMessaging messaging = FirebaseMessaging.instance;
+//   NotificationSettings settings = await messaging.requestPermission(
+//     alert: true,
+//     announcement: false,
+//     badge: true,
+//     carPlay: false,
+//     criticalAlert: false,
+//     provisional: false,
+//     sound: true,
+//   );
+//   debugPrint('Pengguna memberikan izin: ${settings.authorizationStatus}');
+
+//   // Konfigurasi handler pesan latar belakang
+//   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+//   // Inisialisasi plugin flutter_local_notifications
+//   const AndroidInitializationSettings initializationSettingsAndroid =
+//       AndroidInitializationSettings('@mipmap/ic_launcher'); // Ikon aplikasi
+//   const InitializationSettings initializationSettings = InitializationSettings(
+//     android: initializationSettingsAndroid,
+//   );
+//   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+//       onDidReceiveNotificationResponse: (NotificationResponse response) async {
+//     debugPrint('Notifikasi lokal diketuk! Payload: ${response.payload}');
+//     // Navigasi ke NotificationPage saat notifikasi diketuk
+//     navigatorKey.currentState?.push(
+//       MaterialPageRoute(builder: (context) => const NotificationPage()),
+//     );
+//   });
+
+//   // Dapatkan token FCM dan simpan ke Firestore
+//   FirebaseAuth.instance.authStateChanges().listen((user) async {
+//     if (user != null) {
+//       String? fcmToken = await messaging.getToken();
+//       if (fcmToken != null) {
+//         debugPrint('Token FCM: $fcmToken');
+//         AppUser? currentUser = await AppUser.fetchUserById(user.uid);
+//         if (currentUser != null && currentUser.fcmToken != fcmToken) {
+//           await currentUser.updateFcmToken(fcmToken);
+//         } else if (currentUser == null) {
+//           debugPrint(
+//               'Dokumen pengguna tidak ditemukan untuk ${user.uid}. Tidak dapat menyimpan token FCM.');
+//         }
+//       }
+//     }
+//   });
+
+//   // Tangani pesan saat aplikasi di foreground
+//   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+//     debugPrint('Mendapat pesan saat di foreground!');
+//     debugPrint('Data pesan: ${message.data}');
+
+//     if (message.notification != null) {
+//       _showLocalNotification(
+//         message.notification?.title ?? 'Notifikasi Baru',
+//         message.notification?.body ?? 'Anda memiliki notifikasi baru.',
+//         payload: message.data['payload'],
+//       );
+
+//       try {
+//         // Pastikan kotak Hive terbuka sebelum menambah
+//         if (!Hive.isBoxOpen(NOTIFICATION_COUNT_BOX)) {
+//           await Hive.openBox<int>(NOTIFICATION_COUNT_BOX);
+//           debugPrint('FCM Foreground: Membuka NOTIFICATION_COUNT_BOX.');
+//         }
+//         final Box<int> countBox = Hive.box<int>(NOTIFICATION_COUNT_BOX);
+//         int currentCount = countBox.get(NEW_NOTIFICATION_KEY, defaultValue: 0)!;
+//         await countBox.put(NEW_NOTIFICATION_KEY, currentCount + 1);
+//         debugPrint('FCM Foreground: Jumlah notifikasi baru bertambah menjadi: ${currentCount + 1}');
+//       } catch (e) {
+//         debugPrint('FCM Foreground: Error saat menambah jumlah notifikasi: $e');
+//       }
+//     }
+//   });
+
+//   // Tangani pesan saat aplikasi dibuka dari keadaan terminated
+//   RemoteMessage? initialMessage =
+//       await FirebaseMessaging.instance.getInitialMessage();
+//   if (initialMessage != null) {
+//     debugPrint(
+//         'Aplikasi dibuka dari keadaan terminated oleh notifikasi: ${initialMessage.messageId}');
+//     // Hitungan TIDAK diinkremen di sini, karena pengguna langsung menavigasi.
+//     // initState NotificationPage akan mereset hitungan saat memuat.
+//   }
+
+//   // Tangani pesan saat aplikasi dibuka dari keadaan background
+//   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+//     debugPrint(
+//         'Aplikasi dibuka dari background oleh notifikasi: ${message.messageId}');
+//     // Hitungan TIDAK diinkremen di sini, karena pengguna langsung menavigasi.
+//     // initState NotificationPage akan mereset hitungan saat memuat.
+//     navigatorKey.currentState?.push(
+//       MaterialPageRoute(builder: (context) => const NotificationPage()),
+//     );
+//   });
+
+//   // Tentukan halaman awal berdasarkan status pertama kali buka aplikasi
+//   final Box<bool> appSettingsBox = Hive.box<bool>('app_settings');
+//   final bool firstLaunchDone = appSettingsBox.get(GetStartedScreen.firstLaunchKey, defaultValue: false)!;
+
+//   runApp(MyApp(initialRoute: firstLaunchDone ? const CheckAuth() : const GetStartedScreen()));
+// }
+
+// class MyApp extends StatelessWidget {
+//   final Widget initialRoute; // Tambahkan properti untuk rute awal
+
+//   const MyApp({super.key, required this.initialRoute}); // Perbarui konstruktor
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       navigatorKey: navigatorKey, // Tetapkan kunci global
+//       title: 'Aplikasi Pemesanan Hotel',
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//         visualDensity: VisualDensity.adaptivePlatformDensity,
+//       ),
+//       home: initialRoute, // Gunakan initialRoute di sini
+//     );
+//   }
+// }
+
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -798,14 +1229,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hotel_booking_app/pages/login_page.dart';
 import 'package:hotel_booking_app/model/user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hotel_booking_app/pages/notification_page.dart';
 import 'package:hotel_booking_app/services/check_auth.dart';
 import 'package:hotel_booking_app/services/firebase_options.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:hotel_booking_app/pages/get_started_screen.dart'; // Import GetStartedScreen
 
 // Nama kotak Hive untuk menyimpan jumlah notifikasi
 const String NOTIFICATION_COUNT_BOX = 'notification_count_box';
@@ -870,6 +1300,9 @@ void _showLocalNotification(String title, String body,
   debugPrint('Notifikasi lokal ditampilkan: $title - $body');
 }
 
+// GlobalKey untuk NavigatorState jika Anda perlu menavigasi dari luar widget tree
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -879,6 +1312,7 @@ void main() async {
   await Hive.openBox<Uint8List>('hotel_images');
   await Hive.openBox<Uint8List>('room_images');
   await Hive.openBox<int>(NOTIFICATION_COUNT_BOX); // Buka kotak untuk jumlah notifikasi
+  await Hive.openBox<bool>('app_settings'); // Buka kotak untuk pengaturan aplikasi, termasuk status first launch
   debugPrint('Kotak Hive diinisialisasi dan dibuka.');
 
   await initializeDateFormatting('id_ID', null); // Inisialisasi lokal bahasa Indonesia untuk intl
@@ -900,10 +1334,8 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // Inisialisasi plugin flutter_local_notifications
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher'); // Ikon aplikasi
   const InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
   );
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
@@ -980,14 +1412,18 @@ void main() async {
     );
   });
 
-  runApp(const MyApp());
+  // Tentukan halaman awal berdasarkan status pertama kali buka aplikasi
+  final Box<bool> appSettingsBox = Hive.box<bool>('app_settings');
+  // Ubah GetStartedScreen._firstLaunchKey menjadi GetStartedScreen.firstLaunchKey
+  final bool firstLaunchDone = appSettingsBox.get(GetStartedScreen.firstLaunchKey, defaultValue: false)!;
+
+  runApp(MyApp(initialRoute: firstLaunchDone ? const CheckAuth() : const GetStartedScreen()));
 }
 
-// GlobalKey untuk NavigatorState jika Anda perlu menavigasi dari luar widget tree
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget initialRoute; // Tambahkan properti untuk rute awal
+
+  const MyApp({super.key, required this.initialRoute}); // Perbarui konstruktor
 
   @override
   Widget build(BuildContext context) {
@@ -999,10 +1435,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      // home: const LoginPage(),
-      home: CheckAuth(),
+      home: initialRoute, // Gunakan initialRoute di sini
     );
   }
 }
-
-

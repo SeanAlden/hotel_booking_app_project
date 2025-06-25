@@ -27,7 +27,7 @@
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs camera access to take new hotel photos.</string>
 		<key>LSRequiresIPhoneOS</key>
-		<true />
+		<true/>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
@@ -46,8 +46,10 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true />
+		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true />
+		<true/>
+		<key>UIStatusBarHidden</key>
+		<false/>
 	</dict>
 </plist>

@@ -9,7 +9,7 @@ class Location {
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'locationId': id, // Tambahkan locationId
+      'locationId': id, 
     };
   }
 
@@ -19,7 +19,7 @@ class Location {
         .doc(locationId)
         .get();
     if (snapshot.exists) {
-      final data = snapshot.data() as Map<String, dynamic>?; // casting ke Map
+      final data = snapshot.data() as Map<String, dynamic>?;
       if (data != null && data['name'] is String) {
         return data['name'] as String;
       }

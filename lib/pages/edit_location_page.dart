@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hotel_booking_app/model/location.dart';
 
 class EditLocationPage extends StatefulWidget {
-  final String locationId; // Pass the locationId to be edited
+  final String locationId; 
 
   const EditLocationPage({Key? key, required this.locationId}) : super(key: key);
 
@@ -13,12 +12,12 @@ class EditLocationPage extends StatefulWidget {
 
 class _EditLocationPageState extends State<EditLocationPage> {
   final TextEditingController _nameController = TextEditingController();
-  bool _isLoadingData = true; // To show loading while fetching existing data
+  bool _isLoadingData = true; 
 
   @override
   void initState() {
     super.initState();
-    _loadExistingLocationData(); // Load data of the location to be edited
+    _loadExistingLocationData(); 
   }
 
   @override
@@ -80,7 +79,7 @@ class _EditLocationPageState extends State<EditLocationPage> {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Location updated successfully!')));
 
-      Navigator.pop(context, true); // Pop back and indicate success
+      Navigator.pop(context, true); 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update location: $e')),

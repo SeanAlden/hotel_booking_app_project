@@ -1,58 +1,9 @@
-// import 'package:flutter/material.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:hotel_booking_app/model/location.dart';
-
-// class AddLocationPage extends StatefulWidget {
-//   @override
-//   _AddLocationPageState createState() => _AddLocationPageState();
-// }
-
-// class _AddLocationPageState extends State<AddLocationPage> {
-//   final TextEditingController _nameController = TextEditingController();
-
-//   Future<void> _addLocation() async {
-//     final name = _nameController.text;
-//     if (name.isNotEmpty) {
-//       final location = Location(id: '', name: name);
-//       await FirebaseFirestore.instance
-//           .collection('locations')
-//           .add(location.toMap());
-//       _nameController.clear();
-//       ScaffoldMessenger.of(context).showSnackBar(
-//           SnackBar(content: Text('Location added successfully!')));
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Add Location')),
-//       body: Padding(
-//         padding: const EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             TextField(
-//               controller: _nameController,
-//               decoration: InputDecoration(labelText: 'Location Name'),
-//             ),
-//             SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: _addLocation,
-//               child: Text('Add Location'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hotel_booking_app/model/location.dart';
 
 class AddLocationPage extends StatefulWidget {
-  const AddLocationPage({super.key}); // Added const and super.key
+  const AddLocationPage({super.key});
 
   @override
   _AddLocationPageState createState() => _AddLocationPageState();
@@ -62,7 +13,7 @@ class _AddLocationPageState extends State<AddLocationPage> {
   final TextEditingController _nameController = TextEditingController();
 
   Future<void> _addLocation() async {
-    final name = _nameController.text.trim(); // Trim whitespace
+    final name = _nameController.text.trim(); 
     if (name.isNotEmpty) {
       final location = Location(id: '', name: name);
       try {
@@ -88,9 +39,9 @@ class _AddLocationPageState extends State<AddLocationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Location', style: TextStyle(color: Colors.white)), // Added style
-        backgroundColor: Colors.blue, // Added color
-        iconTheme: const IconThemeData(color: Colors.white), // Added icon color
+        title: const Text('Add Location', style: TextStyle(color: Colors.white)), 
+        backgroundColor: Colors.blue, 
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -98,7 +49,7 @@ class _AddLocationPageState extends State<AddLocationPage> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Location Name', border: OutlineInputBorder()), // Added border
+              decoration: const InputDecoration(labelText: 'Location Name', border: OutlineInputBorder()), 
             ),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -106,7 +57,7 @@ class _AddLocationPageState extends State<AddLocationPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(50), // Full width button
+                minimumSize: const Size.fromHeight(50), 
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

@@ -2536,6 +2536,10 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
   List<int> selectedRoomIndices = []; // List to store indices of selected rooms
   String? userId; // Define userId variable
 
+  Hotel? _hotel;
+  bool _isLoadingHotel = true;
+  String? _errorHotel;
+
   Uint8List? _hotelImageBytes; // To store hotel image from Hive
 
   // Function to format currency
@@ -2555,8 +2559,24 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
   void initState() {
     super.initState();
     _fetchRooms(); // Fetch room data when the page is initialized
+    _fetchHotelDetails(); // fetch hotel data
     userId = FirebaseAuth.instance.currentUser?.uid; // Get current user ID
     _loadHotelImage(); // Load hotel image from Hive
+  }
+
+  Future<void> _fetchHotelDetails() async {
+    try {
+      final fetchedHotel = await Hotel.fetchHotelDetails(widget.hotelId);
+      setState(() {
+        _hotel = fetchedHotel;
+        _isLoadingHotel = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorHotel = 'Gagal memuat detail hotel: $e';
+        _isLoadingHotel = false;
+      });
+    }
   }
 
   Future<void> _loadHotelImage() async {
@@ -2808,292 +2828,307 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Hotel?>(
-      future: Hotel.fetchHotelDetails(widget.hotelId), // Fetch hotel details
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          debugPrint(
-              'HotelDetailPage: Error fetching hotel: ${snapshot.error}');
-          return Center(child: Text('Error: ${snapshot.error}'));
-        } else if (!snapshot.hasData) {
-          return const Center(child: Text('Hotel tidak ditemukan'));
-        }
+    // return FutureBuilder<Hotel?>(
+    //   future: Hotel.fetchHotelDetails(widget.hotelId), // Fetch hotel details
+    //   builder: (context, snapshot) {
+    //     if (snapshot.connectionState == ConnectionState.waiting) {
+    //       return const Center(child: CircularProgressIndicator());
+    //     } else if (snapshot.hasError) {
+    //       debugPrint(
+    //           'HotelDetailPage: Error fetching hotel: ${snapshot.error}');
+    //       return Center(child: Text('Error: ${snapshot.error}'));
+    //     } else if (!snapshot.hasData) {
+    //       return const Center(child: Text('Hotel tidak ditemukan'));
+    //     }
 
-        final hotel = snapshot.data!; // Get hotel data
+    //     final hotel = snapshot.data!; // Get hotel data
 
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text("Detail Hotel",
-                style: TextStyle(color: Colors.white)),
-            backgroundColor: Colors.blue,
-            centerTitle: true,
-            iconTheme: const IconThemeData(color: Colors.white),
-          ),
-          bottomNavigationBar: selectedRoomIndices.isNotEmpty
-              ? Container(
-                  padding: const EdgeInsets.all(16),
-                  color: Colors.white,
-                  child:
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //   children: [
-                      //     Text('Total Harga: ${formatCurrency(totalPrice)}',
-                      //         style: const TextStyle(fontWeight: FontWeight.bold)),
-                      //     ElevatedButton(
-                      //       onPressed: () async {
-                      //         try {
-                      //           // Check for booking conflicts before proceeding
-                      //           for (var index in selectedRoomIndices) {
-                      //             if (startDates[index] == null || endDates[index] == null) {
-                      //               ScaffoldMessenger.of(context).showSnackBar(
-                      //                 const SnackBar(content: Text('Harap pilih tanggal untuk semua kamar yang dipilih.')),
-                      //               );
-                      //               return;
-                      //             }
-                      //             if (_isBookingConflict(index)) {
-                      //               ScaffoldMessenger.of(context).showSnackBar(
-                      //                 const SnackBar(
-                      //                     content: Text(
-                      //                         'Satu atau lebih kamar sudah dipesan untuk tanggal yang dipilih atau tanggal konflik.')),
-                      //               );
-                      //               return;
-                      //             }
-                      //           }
+    if (_isLoadingHotel) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()), // Optional: ubah teks
+      );
+    }
 
-                      //           // Proceed with booking if no conflicts are found
-                      //           for (var index in selectedRoomIndices) {
-                      //             final room = _rooms[index];
+    if (_errorHotel != null) {
+      return Scaffold(
+        body: Center(child: Text(_errorHotel!)),
+      );
+    }
 
-                      //             // Set tanggal, guest, dan total harga ke object Room untuk booking
-                      //             room.startDate = startDates[index];
-                      //             room.endDate = endDates[index];
-                      //             room.guestCount = guestCounts[index]; // Use the selected guest count
-                      //             room.totalPrice = roomTotalPrices[index];
+    if (_hotel == null) {
+      return const Scaffold(
+        body: Center(child: Text("Hotel tidak ditemukan.")),
+      );
+    }
 
-                      //             // Call bookRoom from instance
-                      //             await room.bookRoom(userId!); // Pass userId here
-                      //           }
+    final hotel = _hotel!;
 
-                      //           Navigator.of(context).popUntil((route) => route.isFirst);
-                      //           ScaffoldMessenger.of(context).showSnackBar(
-                      //             const SnackBar(content: Text("Pemesanan berhasil!"), backgroundColor: Colors.green),
-                      //           );
-                      //         } catch (e) {
-                      //           ScaffoldMessenger.of(context).showSnackBar(
-                      //             SnackBar(content: Text('Pemesanan gagal: $e')),
-                      //           );
-                      //           debugPrint('Pemesanan gagal: $e');
-                      //         }
-                      //       },
-                      //       style: ElevatedButton.styleFrom(
-                      //           backgroundColor: Colors.deepPurple),
-                      //       child: const Text("Pesan Sekarang",
-                      //           style: TextStyle(color: Colors.white)),
-                      //     ),
-                      //   ],
-                      // ),
-                      Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Total Harga: ${formatCurrency(totalPrice)}',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(
-                          width: 8), // Spacer kecil antara teks dan tombol
-                      ElevatedButton(
-                        onPressed: () async {
-                          try {
-                            for (var index in selectedRoomIndices) {
-                              if (startDates[index] == null ||
-                                  endDates[index] == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          'Harap pilih tanggal untuk semua kamar yang dipilih.')),
-                                );
-                                return;
-                              }
-                              if (_isBookingConflict(index)) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Satu atau lebih kamar sudah dipesan untuk tanggal yang dipilih atau tanggal konflik.'),
-                                  ),
-                                );
-                                return;
-                              }
-                            }
+    return Scaffold(
+      appBar: AppBar(
+        title:
+            const Text("Detail Hotel", style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      bottomNavigationBar: selectedRoomIndices.isNotEmpty
+          ? Container(
+              padding: const EdgeInsets.all(16),
+              color: Colors.white,
+              child:
+                  // Row(
+                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //   children: [
+                  //     Text('Total Harga: ${formatCurrency(totalPrice)}',
+                  //         style: const TextStyle(fontWeight: FontWeight.bold)),
+                  //     ElevatedButton(
+                  //       onPressed: () async {
+                  //         try {
+                  //           // Check for booking conflicts before proceeding
+                  //           for (var index in selectedRoomIndices) {
+                  //             if (startDates[index] == null || endDates[index] == null) {
+                  //               ScaffoldMessenger.of(context).showSnackBar(
+                  //                 const SnackBar(content: Text('Harap pilih tanggal untuk semua kamar yang dipilih.')),
+                  //               );
+                  //               return;
+                  //             }
+                  //             if (_isBookingConflict(index)) {
+                  //               ScaffoldMessenger.of(context).showSnackBar(
+                  //                 const SnackBar(
+                  //                     content: Text(
+                  //                         'Satu atau lebih kamar sudah dipesan untuk tanggal yang dipilih atau tanggal konflik.')),
+                  //               );
+                  //               return;
+                  //             }
+                  //           }
 
-                            for (var index in selectedRoomIndices) {
-                              final room = _rooms[index];
-                              room.startDate = startDates[index];
-                              room.endDate = endDates[index];
-                              room.guestCount = guestCounts[index];
-                              room.totalPrice = roomTotalPrices[index];
-                              await room.bookRoom(userId!);
-                            }
+                  //           // Proceed with booking if no conflicts are found
+                  //           for (var index in selectedRoomIndices) {
+                  //             final room = _rooms[index];
 
-                            Navigator.of(context)
-                                .popUntil((route) => route.isFirst);
+                  //             // Set tanggal, guest, dan total harga ke object Room untuk booking
+                  //             room.startDate = startDates[index];
+                  //             room.endDate = endDates[index];
+                  //             room.guestCount = guestCounts[index]; // Use the selected guest count
+                  //             room.totalPrice = roomTotalPrices[index];
+
+                  //             // Call bookRoom from instance
+                  //             await room.bookRoom(userId!); // Pass userId here
+                  //           }
+
+                  //           Navigator.of(context).popUntil((route) => route.isFirst);
+                  //           ScaffoldMessenger.of(context).showSnackBar(
+                  //             const SnackBar(content: Text("Pemesanan berhasil!"), backgroundColor: Colors.green),
+                  //           );
+                  //         } catch (e) {
+                  //           ScaffoldMessenger.of(context).showSnackBar(
+                  //             SnackBar(content: Text('Pemesanan gagal: $e')),
+                  //           );
+                  //           debugPrint('Pemesanan gagal: $e');
+                  //         }
+                  //       },
+                  //       style: ElevatedButton.styleFrom(
+                  //           backgroundColor: Colors.deepPurple),
+                  //       child: const Text("Pesan Sekarang",
+                  //           style: TextStyle(color: Colors.white)),
+                  //     ),
+                  //   ],
+                  // ),
+                  Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Total Harga: ${formatCurrency(totalPrice)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(
+                      width: 8), // Spacer kecil antara teks dan tombol
+                  ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        for (var index in selectedRoomIndices) {
+                          if (startDates[index] == null ||
+                              endDates[index] == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text("Pemesanan berhasil!"),
-                                  backgroundColor: Colors.green),
+                                  content: Text(
+                                      'Harap pilih tanggal untuk semua kamar yang dipilih.')),
                             );
-                          } catch (e) {
+                            return;
+                          }
+                          if (_isBookingConflict(index)) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Pemesanan gagal: $e')),
+                              const SnackBar(
+                                content: Text(
+                                    'Satu atau lebih kamar sudah dipesan untuk tanggal yang dipilih atau tanggal konflik.'),
+                              ),
                             );
-                            debugPrint('Pemesanan gagal: $e');
+                            return;
+                          }
+                        }
+
+                        for (var index in selectedRoomIndices) {
+                          final room = _rooms[index];
+                          room.startDate = startDates[index];
+                          room.endDate = endDates[index];
+                          room.guestCount = guestCounts[index];
+                          room.totalPrice = roomTotalPrices[index];
+                          await room.bookRoom(userId!);
+                        }
+
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text("Pemesanan berhasil!"),
+                              backgroundColor: Colors.green),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Pemesanan gagal: $e')),
+                        );
+                        debugPrint('Pemesanan gagal: $e');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                    ),
+                    child: const Text(
+                      "Pesan Sekarang",
+                      style: TextStyle(color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : null,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hotel Banner
+            SizedBox(
+              height: 240,
+              width: double.infinity,
+              child: _hotelImageBytes != null
+                  ? Image.memory(
+                      _hotelImageBytes!,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      'assets/images/hotel.png', // Default image
+                      fit: BoxFit.cover,
+                    ),
+            ),
+
+            // Hotel Info
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(hotel.name,
+                      style: const TextStyle(
+                          fontSize: 26, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.orange, size: 20),
+                      const SizedBox(width: 4),
+                      Text("${hotel.rating} / 5.0"),
+                      const Spacer(),
+                      const Icon(Icons.location_on,
+                          color: Colors.red, size: 20),
+                      const SizedBox(width: 4),
+                      FutureBuilder<String>(
+                        future: Location.fetchLocationName(hotel.locationId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Text("Memuat...");
+                          } else if (snapshot.hasError) {
+                            return const Text("Error");
+                          } else {
+                            return Text(
+                                snapshot.data ?? "Lokasi Tidak Diketahui");
                           }
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                        ),
-                        child: const Text(
-                          "Pesan Sekarang",
-                          style: TextStyle(color: Colors.white),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : null,
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Hotel Banner
-                SizedBox(
-                  height: 240,
-                  width: double.infinity,
-                  child: _hotelImageBytes != null
-                      ? Image.memory(
-                          _hotelImageBytes!,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.asset(
-                          'assets/images/hotel.png', // Default image
-                          fit: BoxFit.cover,
-                        ),
-                ),
-
-                // Hotel Info
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(hotel.name,
-                          style: const TextStyle(
-                              fontSize: 26, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.star,
-                              color: Colors.orange, size: 20),
-                          const SizedBox(width: 4),
-                          Text("${hotel.rating} / 5.0"),
-                          const Spacer(),
-                          const Icon(Icons.location_on,
-                              color: Colors.red, size: 20),
-                          const SizedBox(width: 4),
-                          FutureBuilder<String>(
-                            future:
-                                Location.fetchLocationName(hotel.locationId),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const Text("Memuat...");
-                              } else if (snapshot.hasError) {
-                                return const Text("Error");
-                              } else {
-                                return Text(
-                                    snapshot.data ?? "Lokasi Tidak Diketahui");
-                              }
-                            },
-                          )
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(hotel.description),
-                      const SizedBox(height: 20),
-
-                      // Amenities
-                      const Text("Fasilitas",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        // Using Wrap for better layout of amenities
-                        spacing: 8.0, // gap between adjacent chips
-                        runSpacing: 4.0, // gap between lines
-                        children: hotel.amenities
-                            .map((item) => Chip(
-                                  label: Text(item),
-                                  backgroundColor: Colors.blue.shade50,
-                                  labelStyle:
-                                      const TextStyle(color: Colors.blue),
-                                  avatar: const Icon(Icons.check_circle_outline,
-                                      color: Colors.blue, size: 18),
-                                ))
-                            .toList(),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      // Room Options
-                      const Text("Kamar Tersedia",
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 16),
-                      Column(
-                        children: _rooms.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var room = entry
-                              .value; // This room object now has the correct guestCount from Firestore
-                          bool isSelected = selectedRoomIndices.contains(index);
-                          String roomStatus = _getRoomStatus(index);
-
-                          return RoomCard(
-                            // Using a new widget for RoomCard
-                            room:
-                                room, // Pass the Room object with its actual guestCount
-                            index: index,
-                            isSelected: isSelected,
-                            roomStatus: roomStatus,
-                            formatCurrency: formatCurrency,
-                            formatDate: formatDate,
-                            startDates: startDates,
-                            endDates: endDates,
-                            guestCounts: guestCounts,
-                            roomTotalPrices: roomTotalPrices,
-                            pickStartDate: _pickStartDate,
-                            pickEndDate: _pickEndDate,
-                            toggleRoomSelection: _toggleRoomSelection,
-                            calculateTotalPrice: _calculateTotalPrice,
-                            userId: userId, // Pass userId to RoomCard
-                          );
-                        }).toList(),
                       )
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(hotel.description),
+                  const SizedBox(height: 20),
+
+                  // Amenities
+                  const Text("Fasilitas",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    // Using Wrap for better layout of amenities
+                    spacing: 8.0, // gap between adjacent chips
+                    runSpacing: 4.0, // gap between lines
+                    children: hotel.amenities
+                        .map((item) => Chip(
+                              label: Text(item),
+                              backgroundColor: Colors.blue.shade50,
+                              labelStyle: const TextStyle(color: Colors.blue),
+                              avatar: const Icon(Icons.check_circle_outline,
+                                  color: Colors.blue, size: 18),
+                            ))
+                        .toList(),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // Room Options
+                  const Text("Kamar Tersedia",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Column(
+                    children: _rooms.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      var room = entry
+                          .value; // This room object now has the correct guestCount from Firestore
+                      bool isSelected = selectedRoomIndices.contains(index);
+                      String roomStatus = _getRoomStatus(index);
+
+                      return RoomCard(
+                        // Using a new widget for RoomCard
+                        room:
+                            room, // Pass the Room object with its actual guestCount
+                        index: index,
+                        isSelected: isSelected,
+                        roomStatus: roomStatus,
+                        formatCurrency: formatCurrency,
+                        formatDate: formatDate,
+                        startDates: startDates,
+                        endDates: endDates,
+                        guestCounts: guestCounts,
+                        roomTotalPrices: roomTotalPrices,
+                        pickStartDate: _pickStartDate,
+                        pickEndDate: _pickEndDate,
+                        toggleRoomSelection: _toggleRoomSelection,
+                        calculateTotalPrice: _calculateTotalPrice,
+                        userId: userId, // Pass userId to RoomCard
+                      );
+                    }).toList(),
+                  )
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 }
