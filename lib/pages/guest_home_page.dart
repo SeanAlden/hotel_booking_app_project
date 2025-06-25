@@ -98,8 +98,22 @@ class _GreetingHeader extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ),
-        IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-        IconButton(icon: const Icon(Icons.notifications), onPressed: () {}),
+        IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            }),
+        IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginPage()),
+              );
+            }),
       ],
     );
   }
