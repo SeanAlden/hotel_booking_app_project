@@ -24,7 +24,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       try {
         User? user = FirebaseAuth.instance.currentUser;
 
-        // Re-authentication step
         final cred = EmailAuthProvider.credential(
           email: user!.email!,
           password: _currentPasswordController.text,
@@ -32,7 +31,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
         await user.reauthenticateWithCredential(cred);
 
-        // Change password
         await user.updatePassword(_newPasswordController.text);
         await FirebaseAuth.instance.signOut();
 
@@ -96,7 +94,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       const SizedBox(height: 10),
                       TextFormField(
                         controller: _currentPasswordController,
-              
                         obscureText: true,
                         decoration: _inputDecoration('Current Password'),
                         validator: (value) {
@@ -126,8 +123,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: true,
-                        decoration:
-                            _inputDecoration('New Password Confirm'),
+                        decoration: _inputDecoration('New Password Confirm'),
                         validator: (value) {
                           if (value != _newPasswordController.text) {
                             return 'Password not match';

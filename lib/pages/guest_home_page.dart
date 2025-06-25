@@ -12,12 +12,12 @@ class GuestHomePage extends StatefulWidget {
 }
 
 class _GuestHomePageState extends State<GuestHomePage> {
-  List<Hotel> _hotels = []; // List to store hotel data
+  List<Hotel> _hotels = []; 
 
   @override
   void initState() {
     super.initState();
-    _fetchHotels(); // Fetch hotels when the page is initialized
+    _fetchHotels(); 
   }
 
   Future<void> _fetchHotels() async {
@@ -69,15 +69,13 @@ class _GuestHomePageState extends State<GuestHomePage> {
           const SizedBox(height: 10),
           _HotelListView(
               hotels: _hotels,
-              getLocationName: _getLocationName), // Pass the fetched hotels
+              getLocationName: _getLocationName), 
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 }
-
-// ----------------------------- COMPONENTS -----------------------------
 
 class _GreetingHeader extends StatelessWidget {
   const _GreetingHeader();
@@ -142,9 +140,9 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _HotelListView extends StatelessWidget {
-  final List<Hotel> hotels; // Accept hotels as a parameter
+  final List<Hotel> hotels; 
   final Future<String> Function(String)
-      getLocationName; // Function to get location name
+      getLocationName; 
 
   const _HotelListView({required this.hotels, required this.getLocationName});
 
@@ -160,7 +158,7 @@ class _HotelListView extends StatelessWidget {
           final hotel = hotels[index];
 
           return FutureBuilder<String>(
-            future: getLocationName(hotel.locationId), // Fetch location name
+            future: getLocationName(hotel.locationId), 
             builder: (context, snapshot) {
               String city = snapshot.connectionState == ConnectionState.waiting
                   ? 'Loading...'
@@ -169,10 +167,10 @@ class _HotelListView extends StatelessWidget {
               return _HotelCard(
                 name: hotel.name,
                 image:
-                    "assets/images/hotel.png", // Use a default image or fetch from hotel data if available
-                city: city, // Use the fetched location name
+                    "assets/images/hotel.png", 
+                city: city, 
                 rate: hotel.rating
-                    .toString(), // Assuming rating is used as price for display
+                    .toString(), 
                 description: hotel.description,
               );
             },

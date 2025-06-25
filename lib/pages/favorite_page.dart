@@ -1,358 +1,11 @@
-//   import 'package:flutter/material.dart';
-
-// class FavoritePage extends StatefulWidget {
-//   const FavoritePage({super.key});
-
-//   @override
-//   State<FavoritePage> createState() => _FavoritePageState();
-// }
-
-// class _FavoritePageState extends State<FavoritePage> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//           title: const Text(
-//             'Favorites',
-//             style: TextStyle(
-//                 fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-//           ),
-//           centerTitle: true,
-//           backgroundColor: Colors.blue,
-//           automaticallyImplyLeading: false,
-//         ),
-//     );
-//   }
-// }
-
-// import 'package:flutter/material.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:hotel_booking_app/model/hotel.dart'; // Import your Hotel model
-// import 'package:hotel_booking_app/model/location.dart'; // Import your Location model
-// import 'package:hotel_booking_app/pages/hotel_detail_page.dart'; // Import HotelDetailPage
-
-// class FavoritePage extends StatefulWidget {
-//   const FavoritePage({super.key});
-
-//   @override
-//   State<FavoritePage> createState() => _FavoritePageState();
-// }
-
-// class _FavoritePageState extends State<FavoritePage> {
-//   User? _currentUser;
-//   final TextEditingController _searchController = TextEditingController();
-//   String _searchQuery = '';
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _currentUser = FirebaseAuth.instance.currentUser;
-//     _searchController.addListener(_onSearchChanged);
-//   }
-
-//   @override
-//   void dispose() {
-//     _searchController.removeListener(_onSearchChanged);
-//     _searchController.dispose();
-//     super.dispose();
-//   }
-
-//   void _onSearchChanged() {
-//     setState(() {
-//       _searchQuery = _searchController.text.toLowerCase();
-//     });
-//   }
-
-//   // Function to remove a hotel from favorites (Firestore)
-//   Future<void> _removeFromFavorites(String hotelId) async {
-//     if (_currentUser == null) return;
-
-//     final userFavoritesDocRef = FirebaseFirestore.instance
-//         .collection('favorites')
-//         .doc(_currentUser!.uid);
-
-//     try {
-//       await FirebaseFirestore.instance.runTransaction((transaction) async {
-//         DocumentSnapshot snapshot = await transaction.get(userFavoritesDocRef);
-
-//         List<String> currentFavoriteHotelIds = [];
-//         if (snapshot.exists) {
-//           final data = snapshot.data() as Map<String, dynamic>;
-//           currentFavoriteHotelIds = List<String>.from(data['hotelIds'] ?? []);
-//         }
-
-//         // Remove the hotelId if it exists
-//         currentFavoriteHotelIds.remove(hotelId);
-
-//         // Update the document
-//         transaction.set(userFavoritesDocRef, {
-//           'hotelIds': currentFavoriteHotelIds,
-//           'lastUpdated': FieldValue.serverTimestamp(),
-//         }, SetOptions(merge: true));
-//       });
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text('Hotel removed from favorites.')),
-//       );
-//     } catch (e) {
-//       print('Error removing from favorites: $e');
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Failed to remove from favorites: $e')),
-//       );
-//     }
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     if (_currentUser == null) {
-//       return Scaffold(
-//         appBar: AppBar(
-//           title: const Text('Favorites', style: TextStyle(color: Colors.white)),
-//           backgroundColor: Colors.blue,
-//           iconTheme: const IconThemeData(color: Colors.white),
-//           centerTitle: true,
-//         ),
-//         body: const Center(
-//           child: Text('Please log in to view your favorites.'),
-//         ),
-//       );
-//     }
-
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Favorites', style: TextStyle(color: Colors.white)),
-//         backgroundColor: Colors.blue,
-//         iconTheme: const IconThemeData(color: Colors.white),
-//         centerTitle: true,
-//       ),
-//       body: Column(
-//         children: [
-//           Padding(
-//             padding: const EdgeInsets.all(16.0),
-//             child: TextField(
-//               controller: _searchController,
-//               decoration: InputDecoration(
-//                 hintText: 'Search...',
-//                 prefixIcon: const Icon(Icons.search),
-//                 border: OutlineInputBorder(
-//                   borderRadius: BorderRadius.circular(10.0),
-//                   borderSide: BorderSide.none,
-//                 ),
-//                 filled: true,
-//                 fillColor: Colors.grey[200],
-//               ),
-//             ),
-//           ),
-//           Expanded(
-//             child: StreamBuilder<DocumentSnapshot>(
-//               stream: FirebaseFirestore.instance
-//                   .collection('favorites')
-//                   .doc(_currentUser!.uid)
-//                   .snapshots(),
-//               builder: (context, snapshot) {
-//                 if (snapshot.connectionState == ConnectionState.waiting) {
-//                   return const Center(child: CircularProgressIndicator());
-//                 }
-//                 if (snapshot.hasError) {
-//                   return Center(child: Text('Error: ${snapshot.error}'));
-//                 }
-//                 if (!snapshot.hasData || !snapshot.data!.exists) {
-//                   return const Center(child: Text('No favorite hotels yet.'));
-//                 }
-
-//                 final data = snapshot.data!.data() as Map<String, dynamic>;
-//                 List<String> favoriteHotelIds =
-//                     List<String>.from(data['hotelIds'] ?? []);
-
-//                 if (favoriteHotelIds.isEmpty) {
-//                   return const Center(child: Text('No favorite hotels yet.'));
-//                 }
-
-//                 // Fetch details for each favorited hotel
-//                 return FutureBuilder<List<Hotel>>(
-//                   future: _fetchFavoriteHotelsDetails(favoriteHotelIds),
-//                   builder: (context, hotelSnapshot) {
-//                     if (hotelSnapshot.connectionState == ConnectionState.waiting) {
-//                       return const Center(child: CircularProgressIndicator());
-//                     }
-//                     if (hotelSnapshot.hasError) {
-//                       return Center(child: Text('Error fetching hotels: ${hotelSnapshot.error}'));
-//                     }
-//                     if (!hotelSnapshot.hasData || hotelSnapshot.data!.isEmpty) {
-//                       return const Center(child: Text('No favorite hotels found.'));
-//                     }
-
-//                     List<Hotel> hotels = hotelSnapshot.data!;
-
-//                     // Apply search filter
-//                     List<Hotel> filteredHotels = hotels.where((hotel) {
-//                       return hotel.name.toLowerCase().contains(_searchQuery) ||
-//                              hotel.description.toLowerCase().contains(_searchQuery);
-//                     }).toList();
-
-//                     if (filteredHotels.isEmpty) {
-//                       return Center(child: Text('No hotels found for "${_searchQuery}"'));
-//                     }
-
-//                     return GridView.builder(
-//                       padding: const EdgeInsets.all(16.0),
-//                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//                         crossAxisCount: 2,
-//                         crossAxisSpacing: 16.0,
-//                         mainAxisSpacing: 16.0,
-//                         childAspectRatio: 0.8, // Adjusted aspect ratio to match the image
-//                       ),
-//                       itemCount: filteredHotels.length,
-//                       itemBuilder: (context, index) {
-//                         final hotel = filteredHotels[index];
-//                         return FavoriteHotelCard(
-//                           hotel: hotel,
-//                           onRemoveFavorite: () => _removeFromFavorites(hotel.id),
-//                         );
-//                       },
-//                     );
-//                   },
-//                 );
-//               },
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Future<List<Hotel>> _fetchFavoriteHotelsDetails(List<String> hotelIds) async {
-//     if (hotelIds.isEmpty) {
-//       return [];
-//     }
-//     List<Hotel> favoriteHotels = [];
-//     for (String id in hotelIds) {
-//       DocumentSnapshot doc = await FirebaseFirestore.instance.collection('hotels').doc(id).get();
-//       if (doc.exists) {
-//         favoriteHotels.add(Hotel.fromFirestore(doc));
-//       }
-//     }
-//     return favoriteHotels;
-//   }
-// }
-
-// class FavoriteHotelCard extends StatelessWidget {
-//   final Hotel hotel;
-//   final VoidCallback onRemoveFavorite;
-
-//   const FavoriteHotelCard({
-//     super.key,
-//     required this.hotel,
-//     required this.onRemoveFavorite,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return GestureDetector(
-//       onTap: () {
-//         // Navigate to HotelDetailPage when card is tapped
-//         Navigator.push(
-//           context,
-//           MaterialPageRoute(
-//             builder: (context) => HotelDetailPage(
-//               hotelId: hotel.id,
-//               rooms: const [], // You'll likely fetch rooms inside HotelDetailPage
-//             ),
-//           ),
-//         );
-//       },
-//       child: Card(
-//         elevation: 4,
-//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-//         child: Padding(
-//           padding: const EdgeInsets.all(10),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Expanded(
-//                 child: Container(
-//                   decoration: BoxDecoration(
-//                     color: Colors.grey[200],
-//                     borderRadius: BorderRadius.circular(8),
-//                     image: const DecorationImage(
-//                       image: AssetImage("assets/images/hotel.png"), // Placeholder image
-//                       fit: BoxFit.cover,
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//               const SizedBox(height: 8),
-//               Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Expanded(
-//                     child: Text(
-//                       hotel.name,
-//                       style: const TextStyle(fontWeight: FontWeight.bold),
-//                       maxLines: 2,
-//                       overflow: TextOverflow.ellipsis,
-//                     ),
-//                   ),
-//                   GestureDetector(
-//                     onTap: onRemoveFavorite,
-//                     child: const Icon(
-//                       Icons.favorite, // Always filled heart for removal
-//                       color: Colors.red,
-//                       size: 20,
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//               const SizedBox(height: 4),
-//               FutureBuilder<String>(
-//                 future: Location.fetchLocationName(hotel.locationId),
-//                 builder: (context, snapshot) {
-//                   if (snapshot.connectionState == ConnectionState.waiting) {
-//                     return const Text('Loading location...');
-//                   } else if (snapshot.hasError) {
-//                     return const Text('Error location');
-//                   } else {
-//                     return Row(
-//                       children: [
-//                         const Icon(Icons.location_pin, color: Colors.red, size: 16),
-//                         const SizedBox(width: 4),
-//                         Expanded(
-//                           child: Text(
-//                             snapshot.data ?? 'Unknown City',
-//                             maxLines: 1,
-//                             overflow: TextOverflow.ellipsis,
-//                           ),
-//                         ),
-//                       ],
-//                     );
-//                   }
-//                 },
-//               ),
-//               const SizedBox(height: 4),
-//               Row(
-//                 children: [
-//                   const Icon(Icons.star, color: Colors.orange, size: 16),
-//                   const SizedBox(width: 4),
-//                   Text("${hotel.rating.toStringAsFixed(1)} / 5.0"),
-//                 ],
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-import 'dart:typed_data'; // For Uint8List
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import firebase_auth
-import 'package:hotel_booking_app/model/hotel.dart'; // Import your Hotel model
-import 'package:hotel_booking_app/model/location.dart'; // Import your Location model
-import 'package:hotel_booking_app/pages/hotel_detail_page.dart'; // Import HotelDetailPage
-import 'package:hive_flutter/hive_flutter.dart'; // Import Hive
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hotel_booking_app/model/hotel.dart';
+import 'package:hotel_booking_app/model/location.dart';
+import 'package:hotel_booking_app/pages/hotel_detail_page.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class FavoritePage extends StatefulWidget {
   const FavoritePage({super.key});
@@ -387,7 +40,6 @@ class _FavoritePageState extends State<FavoritePage> {
     });
   }
 
-  // Function to remove a hotel from favorites (Firestore)
   Future<void> _removeFromFavorites(String hotelId) async {
     if (_currentUser == null) return;
 
@@ -405,14 +57,15 @@ class _FavoritePageState extends State<FavoritePage> {
           currentFavoriteHotelIds = List<String>.from(data['hotelIds'] ?? []);
         }
 
-        // Remove the hotelId if it exists
         currentFavoriteHotelIds.remove(hotelId);
 
-        // Update the document
-        transaction.set(userFavoritesDocRef, {
-          'hotelIds': currentFavoriteHotelIds,
-          'lastUpdated': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
+        transaction.set(
+            userFavoritesDocRef,
+            {
+              'hotelIds': currentFavoriteHotelIds,
+              'lastUpdated': FieldValue.serverTimestamp(),
+            },
+            SetOptions(merge: true));
         debugPrint('Hotel $hotelId removed from favorites in Firestore.');
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -431,7 +84,9 @@ class _FavoritePageState extends State<FavoritePage> {
     if (_currentUser == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Favorites', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: const Text('Favorites',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           backgroundColor: Colors.blue,
           iconTheme: const IconThemeData(color: Colors.white),
           centerTitle: true,
@@ -445,7 +100,8 @@ class _FavoritePageState extends State<FavoritePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favorites', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Favorites',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
@@ -490,56 +146,66 @@ class _FavoritePageState extends State<FavoritePage> {
                 final data = snapshot.data!.data() as Map<String, dynamic>;
                 List<String> favoriteHotelIds =
                     List<String>.from(data['hotelIds'] ?? []);
-                debugPrint('Fetched ${favoriteHotelIds.length} favorite hotel IDs.');
+                debugPrint(
+                    'Fetched ${favoriteHotelIds.length} favorite hotel IDs.');
 
                 if (favoriteHotelIds.isEmpty) {
                   return const Center(child: Text('No favorite hotels yet.'));
                 }
 
-                // Fetch details for each favorited hotel
                 return FutureBuilder<List<Hotel>>(
                   future: _fetchFavoriteHotelsDetails(favoriteHotelIds),
                   builder: (context, hotelSnapshot) {
-                    if (hotelSnapshot.connectionState == ConnectionState.waiting) {
+                    if (hotelSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (hotelSnapshot.hasError) {
-                      debugPrint('Favorite Hotel Details FutureBuilder Error: ${hotelSnapshot.error}');
-                      return Center(child: Text('Error fetching hotels: ${hotelSnapshot.error}'));
+                      debugPrint(
+                          'Favorite Hotel Details FutureBuilder Error: ${hotelSnapshot.error}');
+                      return Center(
+                          child: Text(
+                              'Error fetching hotels: ${hotelSnapshot.error}'));
                     }
                     if (!hotelSnapshot.hasData || hotelSnapshot.data!.isEmpty) {
-                      return const Center(child: Text('No favorite hotels found.'));
+                      return const Center(
+                          child: Text('No favorite hotels found.'));
                     }
 
                     List<Hotel> hotels = hotelSnapshot.data!;
-                    debugPrint('Fetched ${hotels.length} actual favorite hotel details.');
+                    debugPrint(
+                        'Fetched ${hotels.length} actual favorite hotel details.');
 
-                    // Apply search filter
                     List<Hotel> filteredHotels = hotels.where((hotel) {
                       return hotel.name.toLowerCase().contains(_searchQuery) ||
-                          hotel.description.toLowerCase().contains(_searchQuery);
+                          hotel.description
+                              .toLowerCase()
+                              .contains(_searchQuery);
                     }).toList();
-                    debugPrint('Filtered ${filteredHotels.length} favorite hotels with query: $_searchQuery');
-
+                    debugPrint(
+                        'Filtered ${filteredHotels.length} favorite hotels with query: $_searchQuery');
 
                     if (filteredHotels.isEmpty) {
-                      return Center(child: Text('No hotels found for "${_searchQuery}"'));
+                      return Center(
+                          child: Text('No hotels found for "${_searchQuery}"'));
                     }
 
                     return GridView.builder(
                       padding: const EdgeInsets.all(16.0),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         crossAxisSpacing: 16.0,
                         mainAxisSpacing: 16.0,
-                        childAspectRatio: 0.53, // Adjusted aspect ratio
+                        childAspectRatio: 0.53,
                       ),
                       itemCount: filteredHotels.length,
                       itemBuilder: (context, index) {
                         final hotel = filteredHotels[index];
-                        return _FavoriteHotelCard( // Use the new card widget
+                        return _FavoriteHotelCard(
                           hotel: hotel,
-                          onRemoveFavorite: () => _removeFromFavorites(hotel.id),
+                          onRemoveFavorite: () =>
+                              _removeFromFavorites(hotel.id),
                         );
                       },
                     );
@@ -559,21 +225,18 @@ class _FavoritePageState extends State<FavoritePage> {
     }
     List<Hotel> favoriteHotels = [];
     for (String id in hotelIds) {
-      DocumentSnapshot doc = await FirebaseFirestore.instance.collection('hotels').doc(id).get();
+      DocumentSnapshot doc =
+          await FirebaseFirestore.instance.collection('hotels').doc(id).get();
       if (doc.exists) {
         favoriteHotels.add(Hotel.fromFirestore(doc));
       } else {
         debugPrint('Favorite hotel with ID $id not found in Firestore.');
-        // Optionally, remove non-existent hotel IDs from the user's favorites list in Firestore
-        // This could be done by iterating through favoriteHotelIds and updating the user's document
-        // to remove any IDs that don't correspond to actual hotels.
       }
     }
     return favoriteHotels;
   }
 }
 
-// New StatefulWidget for individual hotel cards in FavoritePage's GridView
 class _FavoriteHotelCard extends StatefulWidget {
   final Hotel hotel;
   final VoidCallback onRemoveFavorite;
@@ -609,18 +272,21 @@ class _FavoriteHotelCardState extends State<_FavoriteHotelCard> {
     final hotelImagesBox = Hive.box<Uint8List>('hotel_images');
     final Uint8List? imageBytes = hotelImagesBox.get(widget.hotel.id);
 
-    debugPrint('Attempting to load favorite hotel image bytes for ID: ${widget.hotel.id} from Hive.');
+    debugPrint(
+        'Attempting to load favorite hotel image bytes for ID: ${widget.hotel.id} from Hive.');
 
     if (imageBytes != null) {
       setState(() {
         _hotelImageBytes = imageBytes;
       });
-      debugPrint('Favorite hotel image bytes found and loaded for ID: ${widget.hotel.id}.');
+      debugPrint(
+          'Favorite hotel image bytes found and loaded for ID: ${widget.hotel.id}.');
     } else {
       setState(() {
-        _hotelImageBytes = null; // No image bytes found in Hive
+        _hotelImageBytes = null;
       });
-      debugPrint('Favorite hotel image bytes not found for ID: ${widget.hotel.id} in Hive. Showing default.');
+      debugPrint(
+          'Favorite hotel image bytes not found for ID: ${widget.hotel.id} in Hive. Showing default.');
     }
   }
 
@@ -628,13 +294,12 @@ class _FavoriteHotelCardState extends State<_FavoriteHotelCard> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Navigate to HotelDetailPage when card is tapped
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => HotelDetailPage(
               hotelId: widget.hotel.id,
-              rooms: const [], // You'll likely fetch rooms inside HotelDetailPage
+              rooms: const [],
             ),
           ),
         );
@@ -648,14 +313,14 @@ class _FavoriteHotelCardState extends State<_FavoriteHotelCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                height: 100, // Fixed height for image in grid view
+                height: 100,
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
                   image: DecorationImage(
                     image: _hotelImageBytes != null
                         ? MemoryImage(_hotelImageBytes!) as ImageProvider
-                        : const AssetImage("assets/images/hotel.png"), // Default image
+                        : const AssetImage("assets/images/hotel.png"),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -676,7 +341,7 @@ class _FavoriteHotelCardState extends State<_FavoriteHotelCard> {
                   GestureDetector(
                     onTap: widget.onRemoveFavorite,
                     child: const Icon(
-                      Icons.favorite, // Always filled heart for removal
+                      Icons.favorite,
                       color: Colors.red,
                       size: 20,
                     ),
@@ -694,7 +359,8 @@ class _FavoriteHotelCardState extends State<_FavoriteHotelCard> {
                   } else {
                     return Row(
                       children: [
-                        const Icon(Icons.location_pin, color: Colors.red, size: 16),
+                        const Icon(Icons.location_pin,
+                            color: Colors.red, size: 16),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(

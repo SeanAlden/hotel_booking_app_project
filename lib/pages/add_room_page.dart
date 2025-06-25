@@ -136,7 +136,6 @@ class _AddRoomPageState extends State<AddRoomPage> {
     double? calculatedTotalPrice;
     if (_startDate != null &&
         _endDate != null &&
-        // guestCount != null &&
         guestCount > 0) {
       final nights = _endDate!.difference(_startDate!).inDays;
       if (nights > 0) {

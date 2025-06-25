@@ -46,12 +46,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (user == null) return;
 
       try {
-        // Update display name in FirebaseAuth
         if (nameController.text.trim() != user.displayName) {
           await user.updateDisplayName(nameController.text.trim());
         }
 
-        // Update data in Firestore
         await _firestore.collection('users').doc(user.uid).update({
           'name': nameController.text.trim(),
           'phone': phoneController.text.trim(),
@@ -104,8 +102,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.phone,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Phone number is required' : null,
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Phone number is required'
+                    : null,
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<String>(

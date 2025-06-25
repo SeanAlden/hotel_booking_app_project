@@ -65,12 +65,11 @@ class AppUser {
     }
   }
 
-  // NEW: Method to update a user's FCM token in Firestore
   Future<void> updateFcmToken(String? newToken) async {
     try {
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'fcmToken': newToken,
-        'lastTokenUpdate': FieldValue.serverTimestamp(), // Optional: track last update
+        'lastTokenUpdate': FieldValue.serverTimestamp(),
       });
       debugPrint('AppUser: FCM Token updated in Firestore for user $uid to $newToken');
     } catch (e) {

@@ -1,4 +1,4 @@
-import 'dart:typed_data'; 
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,7 +20,7 @@ class _AddHotelPageState extends State<AddHotelPage> {
   final TextEditingController _amenitiesController = TextEditingController();
   String? _selectedLocationId;
   List<Location> _locations = [];
-  Uint8List? _imageBytes; // Changed from File? to Uint8List? for direct memory image
+  Uint8List? _imageBytes;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -62,9 +62,10 @@ class _AddHotelPageState extends State<AddHotelPage> {
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _imageBytes = bytes; // Store bytes directly
+        _imageBytes = bytes;
       });
-      debugPrint('Image picked from: ${pickedFile.path}, size: ${bytes.lengthInBytes} bytes');
+      debugPrint(
+          'Image picked from: ${pickedFile.path}, size: ${bytes.lengthInBytes} bytes');
     } else {
       debugPrint('Image picking cancelled.');
     }
@@ -91,7 +92,7 @@ class _AddHotelPageState extends State<AddHotelPage> {
 
     try {
       final hotel = Hotel(
-        id: '', // Placeholder, Firestore will generate
+        id: '',
         name: name,
         locationId: _selectedLocationId!,
         rating: rating,
@@ -107,10 +108,11 @@ class _AddHotelPageState extends State<AddHotelPage> {
 
       if (_imageBytes != null) {
         final hotelImagesBox = Hive.box<Uint8List>('hotel_images');
-        await hotelImagesBox.put(hotelFirestoreId, _imageBytes!); // Save image bytes
+        await hotelImagesBox.put(hotelFirestoreId, _imageBytes!);
         debugPrint('Image bytes saved to Hive with key: $hotelFirestoreId');
       } else {
-        debugPrint('No image selected for hotel ID: $hotelFirestoreId. Skipping Hive storage.');
+        debugPrint(
+            'No image selected for hotel ID: $hotelFirestoreId. Skipping Hive storage.');
       }
 
       _nameController.clear();
@@ -119,22 +121,20 @@ class _AddHotelPageState extends State<AddHotelPage> {
       _amenitiesController.clear();
       setState(() {
         _selectedLocationId = null;
-        _imageBytes = null; // Clear image bytes
+        _imageBytes = null;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Hotel added successfully!')));
-      
-      // IMPORTANT: Pop with 'true' to indicate success
-      Navigator.pop(context, true); 
 
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to add hotel: $e')),
       );
       debugPrint('Error adding hotel: $e');
-      // Pop with 'false' to indicate failure or just pop without result
-      Navigator.pop(context, false); 
+
+      Navigator.pop(context, false);
     }
   }
 
@@ -201,7 +201,7 @@ class _AddHotelPageState extends State<AddHotelPage> {
               const SizedBox(height: 16),
               _imageBytes == null
                   ? const Text('No image selected.')
-                  : Image.memory(_imageBytes!, height: 150, fit: BoxFit.cover), // Use Image.memory
+                  : Image.memory(_imageBytes!, height: 150, fit: BoxFit.cover),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _pickImage,
@@ -228,4 +228,3 @@ class _AddHotelPageState extends State<AddHotelPage> {
     );
   }
 }
-

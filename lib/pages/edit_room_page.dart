@@ -1,12 +1,12 @@
-import 'dart:typed_data'; 
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart'; 
-import 'package:hive_flutter/hive_flutter.dart'; 
+import 'package:image_picker/image_picker.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hotel_booking_app/model/hotel.dart';
 
 class EditRoomPage extends StatefulWidget {
-  final String roomId; 
+  final String roomId;
 
   const EditRoomPage({Key? key, required this.roomId}) : super(key: key);
 
@@ -26,9 +26,9 @@ class _EditRoomPageState extends State<EditRoomPage> {
   DateTime? _endDate;
   double? _totalPrice;
 
-  Uint8List? _imageBytes; 
+  Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
-  bool _isLoadingData = true; 
+  bool _isLoadingData = true;
 
   @override
   void initState() {
@@ -36,7 +36,7 @@ class _EditRoomPageState extends State<EditRoomPage> {
     _fetchHotels();
     _guestCountController.addListener(_recalculateTotalPrice);
     _priceController.addListener(_recalculateTotalPrice);
-    _loadExistingRoomData(); 
+    _loadExistingRoomData();
   }
 
   @override
@@ -74,7 +74,8 @@ class _EditRoomPageState extends State<EditRoomPage> {
         final data = roomDoc.data() as Map<String, dynamic>;
         _typeController.text = data['type'] ?? '';
         _priceController.text = (data['price'] as num?)?.toString() ?? '';
-        _guestCountController.text = (data['guestCount'] as num?)?.toString() ?? ''; // Load guestCount
+        _guestCountController.text =
+            (data['guestCount'] as num?)?.toString() ?? '';
         _selectedHotelId = data['hotelId'];
 
         if (data['startDate'] is String && data['startDate'].isNotEmpty) {
@@ -85,16 +86,18 @@ class _EditRoomPageState extends State<EditRoomPage> {
         }
         _totalPrice = (data['totalPrice'] as num?)?.toDouble();
 
-        // Load existing image from Hive
         final roomImagesBox = Hive.box<Uint8List>('room_images');
         final Uint8List? existingImageBytes = roomImagesBox.get(widget.roomId);
         setState(() {
           _imageBytes = existingImageBytes;
         });
-        debugPrint('EditRoomPage: Existing room data loaded for ID: ${widget.roomId}');
-        debugPrint('EditRoomPage: Image loaded from Hive: ${existingImageBytes != null ? 'Yes' : 'No'}');
+        debugPrint(
+            'EditRoomPage: Existing room data loaded for ID: ${widget.roomId}');
+        debugPrint(
+            'EditRoomPage: Image loaded from Hive: ${existingImageBytes != null ? 'Yes' : 'No'}');
       } else {
-        debugPrint('EditRoomPage: Room with ID ${widget.roomId} not found in Firestore.');
+        debugPrint(
+            'EditRoomPage: Room with ID ${widget.roomId} not found in Firestore.');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Room data not found!')),
         );
@@ -138,9 +141,10 @@ class _EditRoomPageState extends State<EditRoomPage> {
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _imageBytes = bytes; // Store bytes directly
+        _imageBytes = bytes;
       });
-      debugPrint('EditRoomPage: New image picked from: ${pickedFile.path}, size: ${bytes.lengthInBytes} bytes');
+      debugPrint(
+          'EditRoomPage: New image picked from: ${pickedFile.path}, size: ${bytes.lengthInBytes} bytes');
     } else {
       debugPrint('EditRoomPage: Image picking cancelled.');
     }
@@ -185,7 +189,7 @@ class _EditRoomPageState extends State<EditRoomPage> {
       'hotelId': _selectedHotelId!,
       'type': type,
       'price': price,
-      'guestCount': guestCount, 
+      'guestCount': guestCount,
       'startDate': _startDate?.toIso8601String(),
       'endDate': _endDate?.toIso8601String(),
       'totalPrice': calculatedTotalPrice,
@@ -196,22 +200,24 @@ class _EditRoomPageState extends State<EditRoomPage> {
           .collection('rooms')
           .doc(widget.roomId)
           .update(roomData);
-      debugPrint('EditRoomPage: Room ID ${widget.roomId} updated in Firestore.');
+      debugPrint(
+          'EditRoomPage: Room ID ${widget.roomId} updated in Firestore.');
 
       final roomImagesBox = Hive.box<Uint8List>('room_images');
       if (_imageBytes != null) {
         await roomImagesBox.put(widget.roomId, _imageBytes!);
-        debugPrint('EditRoomPage: Image bytes updated in Hive for key: ${widget.roomId}');
+        debugPrint(
+            'EditRoomPage: Image bytes updated in Hive for key: ${widget.roomId}');
       } else {
         await roomImagesBox.delete(widget.roomId);
-        debugPrint('EditRoomPage: Image removed from Hive for key: ${widget.roomId}');
+        debugPrint(
+            'EditRoomPage: Image removed from Hive for key: ${widget.roomId}');
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Room updated successfully!')));
 
-      Navigator.pop(context, true); 
-
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Failed to update room: $e')));
@@ -252,8 +258,7 @@ class _EditRoomPageState extends State<EditRoomPage> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _endDate ?? _startDate!.add(const Duration(days: 1)),
-      firstDate: _startDate!
-          .add(const Duration(days: 1)),
+      firstDate: _startDate!.add(const Duration(days: 1)),
       lastDate: DateTime(_startDate!.year + 5),
     );
     if (picked != null) {
@@ -298,9 +303,10 @@ class _EditRoomPageState extends State<EditRoomPage> {
               items: _hotels.map((hotel) {
                 return DropdownMenuItem(
                   value: hotel.id,
-                  child: Text(hotel.name,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
+                  child: Text(
+                    hotel.name,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
                 );
               }).toList(),
@@ -328,8 +334,7 @@ class _EditRoomPageState extends State<EditRoomPage> {
             TextField(
               controller: _guestCountController,
               decoration: const InputDecoration(
-                  labelText: 'Guest Capacity',
-                  border: OutlineInputBorder()),
+                  labelText: 'Guest Capacity', border: OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
@@ -355,14 +360,13 @@ class _EditRoomPageState extends State<EditRoomPage> {
                     label: const Text('Pick New Image'),
                   ),
                 ),
-                if (_imageBytes != null) 
-                  const SizedBox(width: 8),
+                if (_imageBytes != null) const SizedBox(width: 8),
                 if (_imageBytes != null)
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
                         setState(() {
-                          _imageBytes = null; 
+                          _imageBytes = null;
                         });
                         debugPrint('EditRoomPage: Image cleared by user.');
                       },

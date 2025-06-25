@@ -8,11 +8,11 @@ import 'package:hotel_booking_app/pages/home_page.dart';
 import 'package:hotel_booking_app/pages/login_page.dart';
 import 'package:hotel_booking_app/pages/profile_page.dart';
 import 'package:hotel_booking_app/pages/admin_home_page.dart';
-import 'package:hotel_booking_app/pages/user_view_page.dart'; 
+import 'package:hotel_booking_app/pages/user_view_page.dart';
 
 class MainNav extends StatefulWidget {
   final bool isLoggedIn;
-  final String? userType; // Added userType to determine navigation items
+  final String? userType;
   const MainNav({super.key, required this.isLoggedIn, this.userType});
 
   @override
@@ -23,7 +23,6 @@ class _MainNavState extends State<MainNav> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
-    // Logic for guests trying to access non-home tabs
     if (!widget.isLoggedIn && index != 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -43,7 +42,7 @@ class _MainNavState extends State<MainNav> {
 
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    // After logout, pushReplacement to LoginPage
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -54,17 +53,13 @@ class _MainNavState extends State<MainNav> {
   Widget build(BuildContext context) {
     List<Widget> pages;
     List<BottomNavigationBarItem> navItems;
-    // String appBarTitle = "Hotel Book App"; // Default title
 
     if (widget.userType == 'admin') {
-      // Admin specific pages and navigation
       pages = [
-        const AdminHomePage(), // Admin's main dashboard
-        // const Center(child: Text("Admin Users Page", style: TextStyle(fontSize: 24))), // Placeholder
+        const AdminHomePage(),
         const UserViewPage(),
-        // const Center(child: Text("Bookings Page", style: TextStyle(fontSize: 24))), // Placeholder
-        const AdminBookPage(), // Admin can also have a profile page
-        const ProfilePage(), // Admin can also have a profile page
+        const AdminBookPage(),
+        const ProfilePage(),
       ];
       navItems = const [
         BottomNavigationBarItem(
@@ -84,9 +79,7 @@ class _MainNavState extends State<MainNav> {
           label: 'Profile',
         ),
       ];
-      // appBarTitle = "Admin Dashboard";
     } else if (widget.isLoggedIn && widget.userType == 'user') {
-      // Logged-in regular user pages and navigation
       pages = [
         const HomePage(),
         const HistoryPage(),
@@ -111,12 +104,9 @@ class _MainNavState extends State<MainNav> {
           label: 'Profile',
         ),
       ];
-      // appBarTitle = "User Home";
     } else {
-      // Guest (not logged in) pages and navigation
       pages = [
         const GuestHomePage(),
-        // Dummy containers for non-accessible tabs for guests
         Container(),
         Container(),
         Container(),

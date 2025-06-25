@@ -1,4 +1,4 @@
-import 'dart:typed_data'; // For Uint8List
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,7 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hotel_booking_app/model/location.dart';
 
 class EditHotelPage extends StatefulWidget {
-  final String hotelId; 
+  final String hotelId;
 
   const EditHotelPage({Key? key, required this.hotelId}) : super(key: key);
 
@@ -21,16 +21,16 @@ class _EditHotelPageState extends State<EditHotelPage> {
   final TextEditingController _amenitiesController = TextEditingController();
   String? _selectedLocationId;
   List<Location> _locations = [];
-  Uint8List? _imageBytes; 
+  Uint8List? _imageBytes;
 
   final ImagePicker _picker = ImagePicker();
-  bool _isLoadingData = true; 
+  bool _isLoadingData = true;
 
   @override
   void initState() {
     super.initState();
     _fetchLocations();
-    _loadExistingHotelData(); 
+    _loadExistingHotelData();
   }
 
   @override
@@ -71,17 +71,19 @@ class _EditHotelPageState extends State<EditHotelPage> {
         _nameController.text = data['name'] ?? '';
         _ratingController.text = (data['rating'] as num?)?.toString() ?? '';
         _descriptionController.text = data['description'] ?? '';
-        _amenitiesController.text = List<String>.from(data['amenities'] ?? []).join(', ');
+        _amenitiesController.text =
+            List<String>.from(data['amenities'] ?? []).join(', ');
         _selectedLocationId = data['locationId'];
 
-        // Load existing image from Hive
         final hotelImagesBox = Hive.box<Uint8List>('hotel_images');
-        final Uint8List? existingImageBytes = hotelImagesBox.get(widget.hotelId);
+        final Uint8List? existingImageBytes =
+            hotelImagesBox.get(widget.hotelId);
         setState(() {
           _imageBytes = existingImageBytes;
         });
         debugPrint('Existing hotel data loaded for ID: ${widget.hotelId}');
-        debugPrint('Image loaded from Hive: ${existingImageBytes != null ? 'Yes' : 'No'}');
+        debugPrint(
+            'Image loaded from Hive: ${existingImageBytes != null ? 'Yes' : 'No'}');
       } else {
         debugPrint('Hotel with ID ${widget.hotelId} not found in Firestore.');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -106,9 +108,10 @@ class _EditHotelPageState extends State<EditHotelPage> {
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _imageBytes = bytes; // Store bytes directly
+        _imageBytes = bytes;
       });
-      debugPrint('New image picked from: ${pickedFile.path}, size: ${bytes.lengthInBytes} bytes');
+      debugPrint(
+          'New image picked from: ${pickedFile.path}, size: ${bytes.lengthInBytes} bytes');
     } else {
       debugPrint('Image picking cancelled.');
     }
@@ -150,11 +153,9 @@ class _EditHotelPageState extends State<EditHotelPage> {
 
       final hotelImagesBox = Hive.box<Uint8List>('hotel_images');
       if (_imageBytes != null) {
-        // If a new image was picked or an existing image is still present
         await hotelImagesBox.put(widget.hotelId, _imageBytes!);
         debugPrint('Image bytes updated in Hive for key: ${widget.hotelId}');
       } else {
-        // If image was explicitly removed or no image was ever selected
         await hotelImagesBox.delete(widget.hotelId);
         debugPrint('Image removed from Hive for key: ${widget.hotelId}');
       }
@@ -162,16 +163,14 @@ class _EditHotelPageState extends State<EditHotelPage> {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Hotel updated successfully!')));
 
-      // IMPORTANT: Pop with 'true' to indicate success
-      Navigator.pop(context, true); 
-
+      Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update hotel: $e')),
       );
       debugPrint('Error updating hotel: $e');
-      // Pop with 'false' to indicate failure or just pop without result
-      Navigator.pop(context, false); 
+
+      Navigator.pop(context, false);
     }
   }
 
@@ -180,7 +179,8 @@ class _EditHotelPageState extends State<EditHotelPage> {
     if (_isLoadingData) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Edit Hotel', style: TextStyle(color: Colors.white)),
+          title:
+              const Text('Edit Hotel', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.blue,
           iconTheme: const IconThemeData(color: Colors.white),
         ),
@@ -261,14 +261,13 @@ class _EditHotelPageState extends State<EditHotelPage> {
                       label: const Text('Pick New Image'),
                     ),
                   ),
-                  if (_imageBytes != null) // Option to remove existing image
-                    const SizedBox(width: 8),
+                  if (_imageBytes != null) const SizedBox(width: 8),
                   if (_imageBytes != null)
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
                           setState(() {
-                            _imageBytes = null; // Clear the image
+                            _imageBytes = null;
                           });
                           debugPrint('Image cleared by user.');
                         },
@@ -291,7 +290,8 @@ class _EditHotelPageState extends State<EditHotelPage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Update Hotel', style: TextStyle(fontSize: 18)),
+                child:
+                    const Text('Update Hotel', style: TextStyle(fontSize: 18)),
               ),
             ],
           ),

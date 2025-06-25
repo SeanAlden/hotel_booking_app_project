@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hotel_booking_app/model/user.dart'; // Ensure this path is correct for your AppUser model
+import 'package:hotel_booking_app/model/user.dart';
 
 class UserViewPage extends StatefulWidget {
   const UserViewPage({Key? key}) : super(key: key);
@@ -37,7 +37,8 @@ class _UserViewPageState extends State<UserViewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User List', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('User List',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
@@ -65,14 +66,15 @@ class _UserViewPageState extends State<UserViewPage> {
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
-                  .where('userType', isNotEqualTo: 'admin') // Filter out admins
+                  .where('userType', isNotEqualTo: 'admin')
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  debugPrint('UserViewPage: StreamBuilder Error: ${snapshot.error}');
+                  debugPrint(
+                      'UserViewPage: StreamBuilder Error: ${snapshot.error}');
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -84,22 +86,27 @@ class _UserViewPageState extends State<UserViewPage> {
                   final userData = userDoc.data() as Map<String, dynamic>;
                   final userName = userData['name']?.toLowerCase() ?? '';
                   final userEmail = userData['email']?.toLowerCase() ?? '';
-                  return userName.contains(_searchQuery) || userEmail.contains(_searchQuery);
+                  return userName.contains(_searchQuery) ||
+                      userEmail.contains(_searchQuery);
                 }).toList();
 
                 if (filteredUsers.isEmpty && _searchQuery.isNotEmpty) {
-                  return Center(child: Text('No users found matching "${_searchQuery}"'));
+                  return Center(
+                      child: Text('No users found matching "${_searchQuery}"'));
                 } else if (filteredUsers.isEmpty) {
-                  return const Center(child: Text('No non-admin users added yet.'));
+                  return const Center(
+                      child: Text('No non-admin users added yet.'));
                 }
-                debugPrint('UserViewPage: Displaying ${filteredUsers.length} filtered users.');
+                debugPrint(
+                    'UserViewPage: Displaying ${filteredUsers.length} filtered users.');
 
                 return ListView.builder(
                   padding: const EdgeInsets.all(8.0),
                   itemCount: filteredUsers.length,
                   itemBuilder: (context, index) {
                     final userDoc = filteredUsers[index];
-                    final user = AppUser.fromMap(userDoc.data() as Map<String, dynamic>);
+                    final user =
+                        AppUser.fromMap(userDoc.data() as Map<String, dynamic>);
 
                     return _UserListItem(user: user);
                   },
@@ -113,7 +120,6 @@ class _UserViewPageState extends State<UserViewPage> {
   }
 }
 
-// Helper Widget for individual user list item
 class _UserListItem extends StatelessWidget {
   final AppUser user;
 
@@ -132,29 +138,30 @@ class _UserListItem extends StatelessWidget {
         padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
-            // User Icon (or Profile Picture Placeholder)
             Container(
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30), // Circular for profile pic
+                borderRadius: BorderRadius.circular(30),
                 color: Colors.blue.shade100,
               ),
               child: Icon(
-                user.gender.toLowerCase() == 'male' ? Icons.person : Icons.person_2_rounded,
+                user.gender.toLowerCase() == 'male'
+                    ? Icons.person
+                    : Icons.person_2_rounded,
                 size: 30,
                 color: Colors.blue.shade700,
               ),
             ),
             const SizedBox(width: 16),
-            // User Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     user.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -173,7 +180,8 @@ class _UserListItem extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Type: ${user.userType.toUpperCase()}',
-                    style: const TextStyle(fontSize: 14, color: Colors.deepPurple),
+                    style:
+                        const TextStyle(fontSize: 14, color: Colors.deepPurple),
                   ),
                 ],
               ),
