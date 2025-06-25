@@ -52,6 +52,7 @@ class _GuestHomePageState extends State<GuestHomePage> {
         ),
         centerTitle: true,
         backgroundColor: Colors.blue,
+        automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

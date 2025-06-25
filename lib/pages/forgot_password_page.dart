@@ -32,14 +32,19 @@ class ForgotPasswordPage extends StatelessWidget {
   }
 
   void _showMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Forgot Password?'),
+        title: const Text('Forgot Password?',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -67,7 +72,9 @@ class ForgotPasswordPage extends StatelessWidget {
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _resetPassword(context),
-              child: Text('Reset Password'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+              child: const Text("Reset Password",
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
